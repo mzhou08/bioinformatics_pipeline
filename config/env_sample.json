@@ -1,0 +1,14 @@
+{
+    "/*  PostgreSQL Django Engine name": "*/",
+    "PostgreSQL_ENGINE": "django.db.backends.mysql",
+    "/*  Local database name": "*/",
+    "PostgreSQL_DATABASE": "<database>",
+    "/*  Local database user": "*/",
+    "PostgreSQL_USER": "<user>",
+    "/*  Local database password": "*/",
+    "PostgreSQL_PASSWORD": "<password>",
+    "/*  Local database host": "*/",
+    "PostgreSQL_HOST": "<host>",
+    "/*  Local database port": "*/",
+    "PostgreSQL_PORT": "<id>"
+}
