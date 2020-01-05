@@ -1,0 +1,29 @@
+
+Here is the list of peroxidase sequence information:
+
+<table border="1">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Type</th>
+    <th>FASTA</th>
+    <th>ModBase_id</th>
+    <th>SWISS-MODEL_id</th>
+  </tr>
+  {% for row in excel_data %}
+    <tr>
+    {% for cell in row %}
+      <td>{{ cell }}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+
+<form action="{% url "uniprot" %}" method="POST" class="form-horizontal"> 
+  {% csrf_token %}
+  <div class="form-group">                    
+      <div class="col-md-3 col-sm-3 col-xs-12 col-md-offset-3" style="margin-bottom:10px;">
+           <button class="btn btn-primary"> <span class="glyphicon glyphicon-upload" style="margin-right:5px;"></span>Query UniProt </button>
+      </div> 
+  </div>
+</form>
