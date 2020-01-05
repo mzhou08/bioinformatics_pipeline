@@ -1,3 +1,6 @@
+# the configuration file
+app/config/env.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
