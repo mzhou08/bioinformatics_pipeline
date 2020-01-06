@@ -28,4 +28,18 @@ urlpatterns = [
     url(r'^uniprot/$', views.query_uniprot, name='uniprot'),
     url(r'^blastp/$', views.blastp_view, name='blastp'),
     url(r'^meme/$', views.meme_view, name="meme"),
+    # related to gene-micronRNA
+    url(r'^uploadGenemiRNACluter/$', views.get_upload_gene_miRNA_cluster_template, name="upload_gene_miRNA_cluster"),
+    url(r'^upload_gene_miRNA_cluster_csv/$', views.upload_gene_miRNA_cluster_csv, name='upload_gene_miRNA_cluster_csv'),
+    
+    # load miRNA sequences into miRNA database table
+    url(r'^requestmiRNASequence/$', views.get_request_miRNA_sequence_template, name="request_miRNA_sequence"),
+    url(r'^querymiRNASequence/$', views.query_miRNA_sequence, name='querymiRNASequence'),
+
+    # load gene sequences into UniProt database table
+    url(r'^requestGeneSequence/$', views.get_request_gene_sequence_template, name="request_gene_sequence"),
+    url(r'^queryGeneSequence/$', views.query_gene_sequence, name='queryGeneSequence'),
+    
+    url(r'^memeRNA/$', views.meme_view, name="meme"),
+
 ]

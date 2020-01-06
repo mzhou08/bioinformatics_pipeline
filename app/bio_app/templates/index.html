@@ -1,8 +1,18 @@
 {% extends 'base.html' %}  
 
 {% block content %}
+<div>
+    Protein Analysis <br/>
     Step 1: please go to <a href="/upload" target="_new">upload protein sequence</a> page to upload peroxidase sequences; <br/>
     Step 2: please go to <a href="/uniprot" target="_new">UniProt/SWISS-MODEL/ModBase</a> page to look up protein information; <br/>
     Step 3: please go to <a href="/blastp" target="_new">Blastp</a> page to compare proteins with yeast protein; <br/>
-    Step 4: please go to <a href="/meme" target="_new">MEME</a> page to generate MEME motifs; <br/>
+    Step 4: please go to <a href="/meme" target="_new">MEME</a> page to request MEME motifs; <br/>
+</div>
+<hr/>
+<div>
+    Gene Analysis <br/>
+    Step 1: please go to <a href="/uploadGenemiRNACluter" target="_new">upload gene-microRNA cluster file </a> page to upload cluster Excel file; <br/>
+    Step 2: please go to <a href="/requestmiRNASequence" target="_new">request miRNA</a> page to request miRND sequences; <br/>
+    Step 2: please go to <a href="/requestGeneSequence" target="_new">request gene</a> page to request gene sequences; <br/>
+</div>
 {% endblock %}

@@ -29,7 +29,7 @@ from collections import namedtuple
 from django.urls import reverse, reverse_lazy
 
 from django.shortcuts import redirect
-from bio_app.models import protein_sequence, request_queue
+from bio_app.models import protein_sequence, request_queue, gene_sequence, miRNA_sequence, gene_miRNA_mapping, gene_miRNA_cluster
 from bio_app.forms import MEMERequestForm, BLASTPRequestForm
 
 from Bio.Blast.Applications import NcbiblastpCommandline
@@ -38,6 +38,7 @@ from Bio.Blast import NCBIXML
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
+from Bio import Entrez
 
 import subprocess
 
@@ -49,11 +50,16 @@ from moca.pipeline import Pipeline
 from moca.bedoperations import fimo_to_sites
 from moca.helpers import read_memefile
 
+from urllib.error import HTTPError
+
+
 logger = logging.getLogger(__name__)
 
+# upload protein csv
 def get_upload_csv_template(request): 
     return render(request, 'upload_csv.html', context={})
 
+# process uploaded protein csv file
 def upload_csv(request):
 
     excel_data = list()
@@ -121,6 +127,62 @@ def upload_csv(request):
         messages.error(request,"Unable to upload file. "+repr(e))
     
     return render(request, 'upload_result.html', context={"excel_data":excel_data})
+
+def get_upload_gene_miRNA_cluster_template(request): 
+    return render(request, 'upload_gene_miRNA_cluster.html', context={})
+
+def upload_gene_miRNA_cluster_csv(request):
+    excel_data = list()
+    
+    data = {}
+    if "GET" == request.method:
+        return render(request, "upload_gene_miRNA_cluster.html", data)
+    # if not GET, then proceed
+    try:
+        csv_file = request.FILES["csv_file"]
+        
+        df = pd.read_excel(csv_file, sheet_name='Sheet1')
+        print(df.head())
+        # prepare to output new csv file with fasta info
+        for index, row in df.iterrows():
+            cluster_id = int(row["cluster_id"])
+            print(cluster_id)
+
+            # split and get gene and miRNA ids
+            content = row["content"]
+            gene_miRNA_list = content.split(" ")
+            print(gene_miRNA_list)
+
+            # hsa-mir-
+            for gene_miRNA_id in gene_miRNA_list:
+                print(gene_miRNA_id)
+                gene_miRNA_type = "gene"
+                if (gene_miRNA_id.startswith("hsa-mir-")):
+                    # update the type to be miRNA
+                    gene_miRNA_type = "miRNA"
+
+                    # insert into miRNA_sequence table
+                    miRNA_sequence_record = miRNA_sequence(miRNA_id = gene_miRNA_id,
+                                                    miRNA_fasta = "")
+                    miRNA_sequence_record.save()
+                else:
+                    # insert into gene_sequence table
+                    gene_sequence_record = gene_sequence(gene_id = gene_miRNA_id,
+                                                    gene_fasta = "")
+                    gene_sequence_record.save()
+                
+                print(gene_miRNA_type)
+                # save entry into gene_miRNA_cluster table
+                gene_miRNA_cluster_record = gene_miRNA_cluster(cluster_id = cluster_id,
+                                                    gene_miRNA_id = gene_miRNA_id,
+                                                    gene_miRNA_type = gene_miRNA_type)
+                gene_miRNA_cluster_record.save()
+
+    except Exception as e:
+        logging.getLogger("error_logger").error("Unable to upload file. "+repr(e))
+        messages.error(request,"Unable to upload file. "+repr(e))
+    
+    return render(request, 'index.html', context={})
 
 def query_uniprot(request):
     print("in query_uniprot")
@@ -284,3 +346,109 @@ def meme_view(request):
 
 def get_home_template(request):
     return render(request, 'index.html', context={})
+
+################ miRNA ###############
+def get_request_miRNA_sequence_template(request):
+    return render(request, 'request_miRNA_sequence.html')
+
+def query_miRNA_sequence(request):
+    # get all miRNA records with empty sequence
+    miRNA_list = list(miRNA_sequence.objects.filter(miRNA_fasta = ""))
+    for miRNA in miRNA_list:
+        miRNA_id = miRNA.miRNA_id
+        # use the sequence name to query miRBase
+        lookup_string = "http://www.mirbase.org/cgi-bin/textsearch_json.pl?q={}".format(miRNA_id)
+        print(lookup_string)
+        page = requests.get(lookup_string)
+        page_string = page.content
+        if "did not return any results" in str(page_string):
+            not_found_count = not_found_count + 1
+            print("Cannot find " + miRNA_id + "in miRBase. ")
+        else:
+            json_data = json.loads(page_string.decode("utf-8"))
+            # get the MI ID number
+            MI_ID = (json_data["data"][0]["accession"])
+
+            # based on the MI ID number to get miRNA sequence
+            MI_lookup_string = "http://www.mirbase.org/cgi-bin/get_seq.pl?acc={}".format(MI_ID)
+            print(MI_lookup_string)
+            MI_page = requests.get(MI_lookup_string)
+            
+            MI_page_tree=html.fromstring(MI_page.content)
+            print(MI_page_tree)
+            miRNA_sequence_list=MI_page_tree.xpath('//pre/text()')
+            print(miRNA_sequence_list[0])
+
+            # save the fasta info into miRNA_fasta field
+            miRNA.miRNA_fasta = miRNA_sequence_list[0]
+            miRNA.save()
+
+    return render(request, 'index.html', context={})
+
+################ gene ###############
+def get_request_gene_sequence_template(request):
+    return render(request, 'request_gene_sequence.html')
+
+def query_gene_sequence(request):
+    # get all gene records with empty sequence
+    gene_list = list(gene_sequence.objects.order_by("gene_id").filter(gene_fasta = ""))
+    for gene in gene_list:
+        gene_id = gene.gene_id
+
+        ##Annotates Entrez Gene IDs using Bio.Entrez, in particular epost (to
+        ##submit the data to NCBI) and esummary to retrieve the information.
+        ##Returns a list of dictionaries with the annotations."""
+        Entrez.email = "mzhou08@gmail.com"  # Always tell NCBI who you are
+        animal = 'Homo sapien' 
+        search_string = gene_id+"[Gene] AND "+animal+"[Organism]"
+        print(search_string)
+        # AND mRNA[Filter] AND RefSeq[Filter]"
+        #Now we have a search string to seach for ids
+        
+        try:
+            handle = Entrez.esearch(db="gene", term=search_string)
+            record = Entrez.read(handle)
+            ids = record['IdList']
+            print(ids)
+            #this returns ids as a list if and if no id found it's []. Now lets assume it return 1 item in the list.
+            if len(ids) > 0:
+                ncbi_gene_id = ids[0] #you must implement an if to deal with <0 or >1 cases
+                print(ncbi_gene_id)
+                # save the ncbi_gene_id info into ncbi_gene_id field
+                gene.ncbi_gene_id = ncbi_gene_id
+                gene.save()
+
+                handle = Entrez.efetch(db="nucleotide", id=ncbi_gene_id, rettype="fasta", retmode="text")
+                record = handle.read()
+                print(record.rstrip('\n'))
+                # save the fasta info into gene_fasta field
+                gene.gene_fasta = record.rstrip('\n')
+                gene.save()
+        except HTTPError:
+            print("HTTP error")
+        #this will give you a fasta string which you can save to a file
+        #out_handle = open('myfasta.fasta', 'w')
+        #out_handle.write(record.rstrip('\n'))
+        
+        
+        # use the sequence name to query uniProt
+        
+        #uniprot_lookup_string = "https://www.uniprot.org/uniprot/?query={}&fil=organism%3A%22Homo+sapiens+%28Human%29+%5B9606%5D%22&sort=score".format(gene_id)
+        #niprot_page = requests.get(uniprot_lookup_string)
+        #uniprot_page_string = uniprot_page.content
+        #if "Sorry, no results found for your search term." in str(uniprot_page_string):
+        #    not_found_count = not_found_count + 1
+        #    print("Cannot find " + gene_id + "in miRBase. ")
+        #else:
+        #    uniprot_page_tree=html.fromstring(uniprot_page.content)
+        #    gene_sequence_list=uniprot_page_tree.get("td[@class='entryID']/a[starts-with(@href, '/uniprot/')]/text()")
+        #    print(gene_sequence_list[0])
+
+            # save the fasta info into miRNA_sequence field
+            #miRNA.miRNA_fasta = miRNA_sequence_list[0]
+            #miRNA.save()
+
+    return render(request, 'index.html', context={})
+
+
+    
