@@ -128,6 +128,7 @@ def upload_csv(request):
     
     return render(request, 'upload_result.html', context={"excel_data":excel_data})
 
+# upload gene miRNA cluster file
 def get_upload_gene_miRNA_cluster_template(request): 
     return render(request, 'upload_gene_miRNA_cluster.html', context={})
 
@@ -177,6 +178,41 @@ def upload_gene_miRNA_cluster_csv(request):
                                                     gene_miRNA_id = gene_miRNA_id,
                                                     gene_miRNA_type = gene_miRNA_type)
                 gene_miRNA_cluster_record.save()
+
+    except Exception as e:
+        logging.getLogger("error_logger").error("Unable to upload file. "+repr(e))
+        messages.error(request,"Unable to upload file. "+repr(e))
+    
+    return render(request, 'index.html', context={})
+
+# upload gene miRNA mapping file
+def get_upload_gene_miRNA_mapping_template(request): 
+    return render(request, 'upload_gene_miRNA_mapping.html', context={})
+
+def upload_gene_miRNA_mapping_csv(request):
+    excel_data = list()
+    
+    data = {}
+    if "GET" == request.method:
+        return render(request, "upload_gene_miRNA_mapping.html", data)
+    # if not GET, then proceed
+    try:
+        csv_file = request.FILES["csv_file"]
+        
+        df = pd.read_excel(csv_file, sheet_name='Sheet1')
+        print(df.head())
+        # prepare to output new csv file with fasta info
+        for index, row in df.iterrows():
+            gene_id = row["gene_id"]
+            print(gene_id)
+
+            miRNA_id = row["miRNA_id"]
+            print(miRNA_id)
+            
+            # save entry into gene_miRNA_mapping table
+            gene_miRNA_mapping_record = gene_miRNA_mapping(gene_id = gene_id,
+                                                            miRNA_id = miRNA_id)
+            gene_miRNA_mapping_record.save()
 
     except Exception as e:
         logging.getLogger("error_logger").error("Unable to upload file. "+repr(e))
