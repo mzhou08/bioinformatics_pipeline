@@ -21,7 +21,17 @@ In Step 5, user can make request based on cluster number and miRNA id for furthe
 
 On the server side, an adhoc or cron job will be run and check for outstanding requests, and handle by sequence one at a time. 
 
-scripts/processMEME.py will retrieve cluster id and miRNA id from the requested json record, concatenate the fasta data of all mapped gene into one single file and run MEME (**[MEME][1]**)
+scripts/processMEME.py will retrieve cluster id and miRNA id from the requested json record, concatenate the fasta data of all mapped gene into one single file and run **[MEME][1]**
+
+user can run **[MUCLE][2]** script to generate MSA(multiple squence alignment) and phylogenetic tree visualization.
+
+```
+./muscle3.8.31_i86darwin64 -in <input fastafile> -fastaout <fasta out> -clwout <clw output file>
+```
+
+The generated phylogenetic tree file can be uploaded and visualized in **[iTOL web site][3]**
 
 [1]: https://saket-choudhary.me/moca/
+[2]: https://www.drive5.com/muscle/
+[3]: https://itol.embl.de/
     
