@@ -11,8 +11,9 @@ import psycopg2
 import yagmail
 import json
 import utils
+import sys
 
-def runMeme(fastafile):
+def runMeme(fastafile, type):
     # clean the output folder
     output_dir = "./output/"
     # clean all the file contents inside the output directory first
@@ -30,7 +31,10 @@ def runMeme(fastafile):
 
     """Test meme runner"""
     ## default meme parameters
-    meme_args = '-protein -mod zoops -nmotifs 3 -minw 6 -maxw 30 -nostatus -maxsize 1000000'
+    if (type == 'gene'):
+        meme_args = '-dna -mod zoops -nmotifs 3 -minw 6 -maxw 30 -nostatus -maxsize 1000000'
+    else:
+        meme_args = '-protein -mod zoops -nmotifs 3 -minw 6 -maxw 30 -nostatus -maxsize 1000000'
     catalase_fasta_value = fastafile
     pipeline = Pipeline("./application.cfg")
     output = pipeline.run_meme(fasta_in=catalase_fasta_value,
@@ -52,29 +56,44 @@ def runMeme(fastafile):
             file.write(output)
             file.write("\n")
             raise RuntimeError('Error running meme')
-    
-# connect to database, get MEME request and construct into fasta file
-fastaFileName = utils.getFastaFileFromDb('protein_meme')
 
-if (len(fastaFileName) == 0):
-    print("no pending request found")
-    # if there is no MEME request, do nothing
-    exit(0)
+# count the arguments
+arguments = len(sys.argv) - 1
+if (arguments == 0):
+    print("Please include argument with value : protein or gene ")
+elif (arguments > 1) :
+    print("Please include only one argument with value: protein or gene ")
+else:
+    # output argument-wise
+    position = 1
+    type = ''
+    while (arguments >= position):
+        print ("parameter %i: %s" % (position, sys.argv[position]))
+        type = sys.argv[position]
+        position = position + 1
+        
+    # connect to database, get MEME request and construct into fasta file
+    fastaFileName = utils.getFastaFileFromDb()
 
-# run meme procedure for the fasta file
-runMeme(fastaFileName)
+    if (len(fastaFileName) == 0):
+        print("no pending request found")
+        # if there is no MEME request, do nothing
+        exit(0)
 
-# update request status
-utils.updateRequestStatus(fastaFileName)
+    # run meme procedure for the fasta file
+    runMeme(fastaFileName, type)
 
-# now create a zip file for MEME artifacts
-# fastaFileName format: <ID>_<requester_email>_fasta.txt
-# zipFileName format: <ID>_<requester_email>.zip
-zipFileName = fastaFileName.replace("_fasta.txt", ".zip")
-zipSourceFolderPath = "./output"
-zipFile = utils.createZipFile(zipFileName, zipSourceFolderPath)
+    # update request status
+    utils.updateRequestStatus(fastaFileName)
 
-# send user email with the meme zip attachment
-#sendNotificationEmail
+    # now create a zip file for MEME artifacts
+    # fastaFileName format: <ID>_<requester_email>_fasta.txt
+    # zipFileName format: <ID>_<requester_email>.zip
+    zipFileName = fastaFileName.replace("_fasta.txt", ".zip")
+    zipSourceFolderPath = "./output"
+    zipFile = utils.createZipFile(zipFileName, zipSourceFolderPath)
+
+    # send user email with the meme zip attachment
+    #sendNotificationEmail
 
 

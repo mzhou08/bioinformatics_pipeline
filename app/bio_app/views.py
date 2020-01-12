@@ -29,7 +29,7 @@ from collections import namedtuple
 from django.urls import reverse, reverse_lazy
 
 from django.shortcuts import redirect
-from bio_app.models import protein_sequence, request_queue, gene_sequence, miRNA_sequence, gene_miRNA_mapping, gene_miRNA_cluster, Cluster_miRNA, Cluster_Gene
+from bio_app.models import protein_sequence, request_queue, gene_sequence, miRNA_sequence, gene_miRNA_mapping, Cluster_miRNA, Cluster_Gene
 from bio_app.forms import MEMERequestForm, BLASTPRequestForm, clustermiRNAForm
 
 from Bio.Blast.Applications import NcbiblastpCommandline
@@ -174,10 +174,14 @@ def upload_gene_miRNA_cluster_csv(request):
                 
                 print(gene_miRNA_type)
                 # save entry into gene_miRNA_cluster table
-                gene_miRNA_cluster_record = gene_miRNA_cluster(cluster_id = cluster_id,
-                                                    gene_miRNA_id = gene_miRNA_id,
-                                                    gene_miRNA_type = gene_miRNA_type)
-                gene_miRNA_cluster_record.save()
+                if (gene_miRNA_type=='gene'):
+                    cluster_gene_record = Cluster_Gene(cluster_id = cluster_id,
+                                                        gene_id = gene_miRNA_id)
+                    cluster_gene_record.save()
+                else:
+                    cluster_miRNA_record = Cluster_miRNA(cluster_id = cluster_id,
+                                                        miRNA_id = gene_miRNA_id)
+                    cluster_miRNA_record.save()
 
     except Exception as e:
         logging.getLogger("error_logger").error("Unable to upload file. "+repr(e))

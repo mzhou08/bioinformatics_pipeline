@@ -113,22 +113,6 @@ class Cluster_Gene(models.Model):
         
         verbose_name_plural = "clusters_genes"
 
-
-class gene_miRNA_cluster(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="Table Id")
-    cluster_id = models.IntegerField(blank=False, null=False, verbose_name="cluster Id")
-    gene_miRNA_id = models.CharField(max_length=255, blank=False, null=False, verbose_name="gene_miRNA_ID") #  ID for either gene or miRNA
-    gene_miRNA_type = models.CharField(max_length=255, blank=False, null=False, verbose_name="gene_miRNA_type") # type could be either "gene" or "miRNA"
-    
-    def __str__(self):
-        return self.id
-
-    class Meta:
-        db_table = 'gene_miRNA_cluster'
-        unique_together = ('cluster_id', 'gene_miRNA_id')
-        verbose_name = "Gene miRNA Cluster"
-        verbose_name_plural = "Gene miRNA Clusters"
-
 class request_queue(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="Table Id")
     request_type = models.CharField(max_length=255, blank=True, null=True, verbose_name="Request Type")

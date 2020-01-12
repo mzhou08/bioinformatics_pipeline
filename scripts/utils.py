@@ -49,11 +49,11 @@ def createZipFile(zipname, path):
     zipf.close()
 
 
-def getFastaFileFromDb(type):
+def getFastaFileFromDb():
     conn = getDatabaseConnection()
     cur = conn.cursor()
     # get the first protein_MEME request
-    query_string = f"""SELECT ID, REQUEST_TYPE, REQUEST_DETAIL, REQUESTER_EMAIL FROM REQUEST_QUEUE WHERE REQUEST_TYPE='{type}' AND REQUEST_STATUS = '' ORDER BY ID LIMIT 1"""
+    query_string = f"""SELECT ID, REQUEST_TYPE, REQUEST_DETAIL, REQUESTER_EMAIL FROM REQUEST_QUEUE WHERE REQUEST_STATUS = '' ORDER BY ID LIMIT 1"""
     print(query_string)
     cur.execute(query_string)
     rows = cur.fetchall()
@@ -71,21 +71,53 @@ def getFastaFileFromDb(type):
         print("REQUEST_DETAIL =", row[2])
         print("REQUESTER_EMAIL =", row[3], "\n")
         request_id = row[0]
-        protein_class = row[2]
+        request_type = row[1]
+        request_detail = row[2]
         requester_email = row[3]
 
-        # concatenate all fasta info into one fasta file
-        # file format: <request_id>_<requester_email>_fasta.txt
-        fasta_file_name = f"""{request_id}_{requester_email}_fasta.txt"""
-        fasta_file = open (fasta_file_name, "w+")
-        protein_cur = conn.cursor()
-        protein_cur.execute(f"""SELECT PROTEIN_FASTA FROM PROTEIN_SEQUENCE WHERE PROTEIN_CLASS='{protein_class}'""")
-        protein_rows = protein_cur.fetchall()
-        for protein_row in protein_rows:
-            # only process one request at a time
-            protein_fasta = protein_row[0]
-            print("protein fasta =", protein_row[0], "\n")
-            fasta_file.write(f"""{protein_fasta}\n""")
+        if (request_type == 'protein_meme'):
+            # protein_meme
+            # concatenate all fasta info into one fasta file
+            # file format: <request_id>_<requester_email>_fasta.txt
+            protein_class = request_detail
+            fasta_file_name = f"""{request_id}_{requester_email}_protein_fasta.txt"""
+            fasta_file = open (fasta_file_name, "w+")
+            protein_cur = conn.cursor()
+            protein_cur.execute(f"""SELECT PROTEIN_FASTA FROM PROTEIN_SEQUENCE WHERE PROTEIN_CLASS='{protein_class}'""")
+            protein_rows = protein_cur.fetchall()
+            for protein_row in protein_rows:
+                # only process one request at a time
+                protein_fasta = protein_row[0]
+                print("protein fasta =", protein_row[0], "\n")
+                fasta_file.write(f"""{protein_fasta}\n""")
+        elif (request_type == 'get_gene_for_miRNA'):
+            # get the gene meme
+            # parse json record
+            # {"cluster_id": "<cluster_id>", "miRNA_id": "<miRNA_id>"}
+            request_detail_json = json.loads(request_detail)
+            cluster_id = request_detail_json['cluster_id']
+            miRNA_id = request_detail_json['miRNA_id']
+
+            fasta_file_name = f"""{request_id}_{requester_email}_gene_fasta.txt"""
+            fasta_file = open (fasta_file_name, "w+")
+            gene_cur = conn.cursor()
+            gene_cur.execute(f"""select gene_fasta \
+                from gene_sequence \
+                where gene_id in \
+                ( select gene_id \
+                from "gene_miRNA_mapping" \
+                where "miRNA_id"='{miRNA_id}') \
+                and gene_id in \
+                ( select gene_id \
+                from "cluster_gene" \
+                where "cluster_id" ='{cluster_id}') \
+                and gene_fasta != '' """)
+            gene_rows = gene_cur.fetchall()
+            for gene_row in gene_rows:
+                # only process one request at a time
+                gene_fasta = gene_row[0]
+                print("gene fasta =", gene_row[0], "\n")
+                fasta_file.write(f"""{gene_fasta}\n""")
     conn.close()
 
     #return fasta file name

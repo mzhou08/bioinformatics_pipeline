@@ -3,7 +3,7 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
-from .models import protein_sequence, request_queue, gene_miRNA_cluster, gene_miRNA_mapping, Cluster, Cluster_miRNA, Cluster_Gene
+from .models import protein_sequence, request_queue, gene_miRNA_mapping, Cluster, Cluster_miRNA, Cluster_Gene
 from django_select2.forms import (
     HeavySelect2MultipleWidget, HeavySelect2Widget, ModelSelect2MultipleWidget,
     ModelSelect2TagWidget, ModelSelect2Widget, Select2MultipleWidget,
