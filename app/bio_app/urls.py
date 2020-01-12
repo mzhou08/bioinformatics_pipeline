@@ -18,6 +18,12 @@ from django.urls import path, include
 from . import views
 from django.conf.urls import url
 from django.views.generic import TemplateView
+from django.conf import settings
+
+from django.urls import path
+
+
+path('select2/', include('django_select2.urls')),
 
 urlpatterns = [
     url(r'^$',
@@ -28,6 +34,8 @@ urlpatterns = [
     url(r'^uniprot/$', views.query_uniprot, name='uniprot'),
     url(r'^blastp/$', views.blastp_view, name='blastp'),
     url(r'^meme/$', views.meme_view, name="meme"),
+    url(r'^listClustermiRNA/$', views.list_cluster_miRNA_view, name="listClustermiRNA"),
+    url(r'ajax_load_miRNAs/', views.load_cluster_miRNAs, name='ajax_load_miRNAs'),
 
     # related to gene-micronRNA cluster
     url(r'^uploadGenemiRNACluster/$', views.get_upload_gene_miRNA_cluster_template, name="upload_gene_miRNA_cluster"),
@@ -46,5 +54,14 @@ urlpatterns = [
     url(r'^queryGeneSequence/$', views.query_gene_sequence, name='queryGeneSequence'),
     
     url(r'^memeRNA/$', views.meme_view, name="meme"),
+    url(r'^select2/', include('django_select2.urls')),
 
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += (
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+        # For django versions after 2.0:
+        #path('__debug__/', include(debug_toolbar.urls)),
+    )

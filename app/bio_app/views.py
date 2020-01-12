@@ -29,8 +29,8 @@ from collections import namedtuple
 from django.urls import reverse, reverse_lazy
 
 from django.shortcuts import redirect
-from bio_app.models import protein_sequence, request_queue, gene_sequence, miRNA_sequence, gene_miRNA_mapping, gene_miRNA_cluster
-from bio_app.forms import MEMERequestForm, BLASTPRequestForm
+from bio_app.models import protein_sequence, request_queue, gene_sequence, miRNA_sequence, gene_miRNA_mapping, gene_miRNA_cluster, Cluster_miRNA, Cluster_Gene
+from bio_app.forms import MEMERequestForm, BLASTPRequestForm, clustermiRNAForm
 
 from Bio.Blast.Applications import NcbiblastpCommandline
 from io import StringIO
@@ -485,6 +485,50 @@ def query_gene_sequence(request):
             #miRNA.save()
 
     return render(request, 'index.html', context={})
+
+## show the select cluster->miRNA form
+def list_cluster_miRNA_view(request):
+    cluster_id = ''
+    miRNA_id = ''
+    if request.method == 'POST':
+        try:
+            # the selected cluster id
+            cluster_id = request.POST.get("cluster")
+            print(cluster_id)
+            miRNA_id = request.POST.get("miRNA")
+            miRNA_list = list(Cluster_miRNA.objects.filter(id=miRNA_id).values_list('miRNA_id', flat=True))
+            # the selected miDNA name
+            miRNA_id = miRNA_list[0]
+            print(miRNA_id)
+
+            # save the request type into database request_queue table
+            data = {}
+            data['miRNA_id'] = miRNA_id
+            data['cluster_id'] = cluster_id
+            json_data = json.dumps(data)
+            try:
+                request_record = request_queue(request_type = "get_gene_for_miRNA", 
+                                        request_detail = json_data,
+                                        requester_email = "mzhou08@gmail.com",
+                                        request_status= "")
+                request_record.save()
+            except error:
+                print(error)
+            return render( request, "index.html")
+            
+            
+        except error:
+            print(error)
+        return render( request, "index.html")
+
+    context = {} 
+    context['form'] = clustermiRNAForm()
+    return render(request, 'clustermiRNA.html', context)
+    
+def load_cluster_miRNAs(request):
+    cluster_id = request.GET.get('cluster_id')
+    miRNAs = gene_miRNA_cluster.objects.filter(cluster_id=cluster_id, gene_miRNA_type='miRNA').order_by('gene_miRNA_id')
+    return render(request, 'miRNA_dropdown_list_options.html', {'miRNAs': miRNAs})
 
 
     

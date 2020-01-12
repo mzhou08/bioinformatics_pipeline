@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-
 import json
 
+from debug_toolbar import settings as dt_settings
 
 if os.getenv("ENV_JSON"):
     # optionally load settings from an environment variable
@@ -22,6 +22,9 @@ else:
     # else try loading settings from the json config file
     with open(os.getenv("ENV_FILE", "./config/env.json")) as f:
         ENV = json.load(f)
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = ENV.get('DJANGO_DEBUG', True)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,6 +58,8 @@ INSTALLED_APPS = [
     'pinax.eventlog',
     'crispy_forms',
     'bio_app',
+    'debug_toolbar',
+    'django_select2',
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
@@ -66,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'bio_app.urls'
@@ -76,6 +82,7 @@ TEMPLATES = [
         'DIRS': [os.path.join(APPLICATION_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': ENV.get('DJANGO_TEMPLATE_DEBUG', DEBUG),
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -140,3 +147,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Method to show the user, if they're authenticated and superuser
+def show_debug_toolbar(request):
+    return DEBUG
+
+DEBUG_TOOLBAR_PANELS = dt_settings.PANELS_DEFAULTS
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK" : show_debug_toolbar,
+}

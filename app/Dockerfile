@@ -10,6 +10,7 @@ RUN apt-get update && \
     apt-get clean -y && \
     pip install -r requirements.txt
 RUN pip install -r requirements.txt
+
 COPY . /code/
 
 

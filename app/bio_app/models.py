@@ -73,6 +73,47 @@ class gene_miRNA_mapping(models.Model):
         verbose_name = "Gene miRNA Mapping"
         verbose_name_plural = "Gene miRNA Mappings"
 
+class Cluster(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        ordering = ('name',)
+        db_table = 'clusters'
+        verbose_name = "Cluster"
+        verbose_name_plural = "Clusters"
+
+class Cluster_miRNA(models.Model):
+    cluster = models.ForeignKey('Cluster', on_delete = models.CASCADE)
+    miRNA_id = models.CharField(max_length=255, blank=False, null=False, verbose_name="miRNA_ID") #  ID for miRNA
+    
+    def __str__(self):
+        return self.miRNA_id
+
+    class Meta:
+        ordering = ('miRNA_id',)
+        db_table = 'cluster_miRNA'
+        unique_together = (('cluster', 'miRNA_id'),)
+        verbose_name = "clusters_miRNA"
+        verbose_name_plural = "clusters_miRNAs"
+
+class Cluster_Gene(models.Model):
+    cluster = models.ForeignKey('Cluster', on_delete = models.CASCADE)
+    gene_id = models.CharField(max_length=255, blank=False, null=False, verbose_name="gene_ID") #  ID for gene
+    
+    def __str__(self):
+        return self.gene_id
+
+    class Meta:
+        ordering = ('gene_id',)
+        db_table = 'cluster_gene'
+        unique_together = (('cluster', 'gene_id'),)
+        verbose_name = "clusters_gene"
+        
+        verbose_name_plural = "clusters_genes"
+
+
 class gene_miRNA_cluster(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="Table Id")
     cluster_id = models.IntegerField(blank=False, null=False, verbose_name="cluster Id")
