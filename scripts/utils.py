@@ -90,6 +90,21 @@ def getFastaFileFromDb():
                 protein_fasta = protein_row[0]
                 print("protein fasta =", protein_row[0], "\n")
                 fasta_file.write(f"""{protein_fasta}\n""")
+        elif (request_type == 'protein_blastp'):
+            # protein_meme
+            # concatenate all fasta info into one fasta file
+            # file format: <request_id>_<requester_email>_fasta.txt
+            protein_class = request_detail
+            fasta_file_name = f"""{request_id}_{requester_email}_protein_fasta.txt"""
+            fasta_file = open (fasta_file_name, "w+")
+            protein_cur = conn.cursor()
+            protein_cur.execute(f"""SELECT PROTEIN_FASTA FROM PROTEIN_SEQUENCE WHERE PROTEIN_CLASS='{protein_class}'""")
+            protein_rows = protein_cur.fetchall()
+            for protein_row in protein_rows:
+                # only process one request at a time
+                protein_fasta = protein_row[0]
+                print("protein fasta =", protein_row[0], "\n")
+                fasta_file.write(f"""{protein_fasta}\n""")
         elif (request_type == 'get_gene_for_miRNA'):
             # get the gene meme
             # parse json record

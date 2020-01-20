@@ -34,24 +34,40 @@ def runBlastp(fastaFileName):
     cline = NcbiblastpCommandline(query=fastaFileName, subject="GCF_000146045.2_R64_protein.faa", 
                     #outfmt='6 qseqid sseqid qstart qend evalue', 
                     outfmt='6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore', 
-                    out=blastpFileName, evalue=1e-5)
+                    out=blastpFileName, 
+                    evalue=1e-5)
     print(cline)
-    output = cline()[0]
-    blast_result_record = NCBIXML.read(StringIO(output))
-    print(StringIO(output))
-    # Print some information on the result
-    for alignment in blast_result_record.alignments:
-        for hsp in alignment.hsps:
-            print(f"""\n\n****{row['Name']} Alignment with yeast ****""")
-            print('sequence:', alignment.title)
-            print('length:', alignment.length)
-            print('e value:', hsp.expect)
-            print(hsp.query)
-            print(hsp.match)
-            print(hsp.sbjct)
+    # run the command
+    cline()
+
+    # add top line of column headers
+    with open(blastpFileName, 'r+') as file:
+        originalContent = file.read()
+        file.seek(0, 0)              # Move the cursor to top line
+        file.write('qseqid\tsseqid\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore\n')
+        file.write(originalContent)
+
+    return blastpFileName
+
+def refineBlastpResult(blastFileName):
+    # df is a pandas.DataFrame and blast-out.b6 won't have a header
+    print(blastFileName)
+    outputFileName = blastFileName.replace(".csv", "_sorted.csv")
+    print(outputFileName)
+
+    df = pd.read_csv(blastFileName, sep='\t')
+    print(df.head(5))
+
+    # the default outfmt 6 columns
+    #default_outfmt6_cols = 'qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore'.strip().split(' ')
+    #df.columns = default_outfmt6_cols
+    new= df.groupby(['qseqid']).apply(lambda x: x.nlargest(1,['bitscore'])).reset_index(drop=True)
+
+    new_sorted_df= new.sort_values(by=['qseqid', 'sseqid'], ascending=False)
+    new_sorted_df.to_csv(outputFileName,index=False)
 
 # connect to database, get blastp request, and construct fasta file
-fastaFileName = utils.getFastaFileFromDb('protein_blastp')
+fastaFileName = utils.getFastaFileFromDb()
 
 if (len(fastaFileName) == 0):
     print("no pending request found")
@@ -59,8 +75,11 @@ if (len(fastaFileName) == 0):
     exit(0)
 
 # run meme procedure for the fasta file
-runBlastp(fastaFileName)
+blastFileName = runBlastp(fastaFileName)
 
 # update request status
 utils.updateRequestStatus(fastaFileName)
+
+# process and sort blastp result file
+refineBlastpResult(blastFileName)
 

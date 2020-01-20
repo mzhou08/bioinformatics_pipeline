@@ -1,5 +1,5 @@
 # Cython==0.28.5
-Django>=2.0,<3.0
+Django>=3.0.1
 psycopg2>=2.7,<3.0
 
 # These should be okay to update minors
@@ -20,3 +20,8 @@ moca
 
 django-debug-toolbar>=2.0,<2.0.99
 django_select2
+
+mygene
+ensembl_rest
+
+pyOpenSSL

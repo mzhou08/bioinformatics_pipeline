@@ -51,7 +51,7 @@ from moca.bedoperations import fimo_to_sites
 from moca.helpers import read_memefile
 
 from urllib.error import HTTPError
-
+import mygene
 
 logger = logging.getLogger(__name__)
 
@@ -256,7 +256,7 @@ def query_uniprot(request):
         page_string = ""
         sequence_string = "https://www.uniprot.org/uniprot/?query=" + sequence_name + "&sort=score"
 
-        page = requests.get(sequence_string)
+        page = requests.get(sequence_string, verify=False)
         page_string = page.content
         if "Sorry, no results found for your search term" in str(page_string):
             not_found_count = not_found_count + 1
@@ -273,7 +273,7 @@ def query_uniprot(request):
 
             # get the uniprot id page
             uniprot_url = "https://www.uniprot.org/uniprot/" + uniprot_id
-            uniprot_page = requests.get(uniprot_url)
+            uniprot_page = requests.get(uniprot_url, verify=False)
             uniprot_page_string = uniprot_page.content
             uniprot_page_tree = html.fromstring(uniprot_page_string)
             #This will get SWISS-MODEL REPOSITORY (SMR)
@@ -429,43 +429,132 @@ def query_miRNA_sequence(request):
 def get_request_gene_sequence_template(request):
     return render(request, 'request_gene_sequence.html')
 
+class EnsemblRestClient(object):
+    def __init__(self, server='http://rest.ensembl.org', reqs_per_sec=15):
+        self.server = server
+        self.reqs_per_sec = reqs_per_sec
+        self.req_count = 0
+        self.last_req = 0
+
+    def perform_rest_action(self, endpoint, hdrs=None, params=None):
+        if hdrs is None:
+            hdrs = {}
+
+        if 'Content-Type' not in hdrs:
+            hdrs['Content-Type'] = 'application/json'
+
+        if params:
+            endpoint += '?' + urlencode(params)
+
+        data = None
+
+        # check if we need to rate limit ourselves
+        if self.req_count >= self.reqs_per_sec:
+            delta = time.time() - self.last_req
+            if delta < 1:
+                time.sleep(1 - delta)
+            self.last_req = time.time()
+            self.req_count = 0
+        
+        try:
+            request = Request(self.server + endpoint, headers=hdrs)
+            response = urlopen(request)
+            content = response.read()
+            if content:
+                print(str(content, 'utf-8'))
+                data = json.loads(str(content, 'utf-8'))
+            self.req_count += 1
+
+        except HTTPError as e:
+            # check if we are being rate limited by the server
+            if e.code == 429:
+                if 'Retry-After' in e.headers:
+                    retry = e.headers['Retry-After']
+                    time.sleep(float(retry))
+                    self.perform_rest_action(endpoint, hdrs, params)
+            else:
+                sys.stderr.write('Request failed for {0}: Status code: {1.code} Reason: {1.reason}\n'.format(endpoint, e))
+           
+        return data
+
+    def get_variants(self, species, symbol):
+        genes = self.perform_rest_action(
+            endpoint='/xrefs/symbol/{0}/{1}'.format(species, symbol), 
+            params={'object_type': 'gene'}
+        )
+        if genes:
+            stable_id = genes[0]['id']
+            variants = self.perform_rest_action(
+                '/overlap/id/{0}'.format(stable_id),
+                params={'feature': 'variation'}
+            )
+            return variants
+        return None
+
 def query_gene_sequence(request):
     # get all gene records with empty sequence
     gene_list = list(gene_sequence.objects.order_by("gene_id").filter(gene_fasta = ""))
+
+    # defining the api-endpoint 
+    API_ENDPOINT = "http://utrdb.ba.itb.cnr.it/search"
+
     for gene in gene_list:
         gene_id = gene.gene_id
 
-        ##Annotates Entrez Gene IDs using Bio.Entrez, in particular epost (to
-        ##submit the data to NCBI) and esummary to retrieve the information.
-        ##Returns a list of dictionaries with the annotations."""
+        #get 3utr fasta from http://utrdb.ba.itb.cnr.it/
         Entrez.email = "mzhou08@gmail.com"  # Always tell NCBI who you are
         animal = 'Homo sapien' 
         search_string = gene_id+"[Gene] AND "+animal+"[Organism]"
         print(search_string)
         # AND mRNA[Filter] AND RefSeq[Filter]"
         #Now we have a search string to seach for ids
-        
-        try:
-            handle = Entrez.esearch(db="gene", term=search_string)
-            record = Entrez.read(handle)
-            ids = record['IdList']
-            print(ids)
-            #this returns ids as a list if and if no id found it's []. Now lets assume it return 1 item in the list.
-            if len(ids) > 0:
-                ncbi_gene_id = ids[0] #you must implement an if to deal with <0 or >1 cases
-                print(ncbi_gene_id)
-                # save the ncbi_gene_id info into ncbi_gene_id field
-                gene.ncbi_gene_id = ncbi_gene_id
-                gene.save()
 
-                handle = Entrez.efetch(db="nucleotide", id=ncbi_gene_id, rettype="fasta", retmode="text")
-                record = handle.read()
-                print(record.rstrip('\n'))
+        #!/usr/bin/env python
+        mg = mygene.MyGeneInfo()
+
+        result = mg.query(gene_id, scopes="symbol", fields=["ensembl"], species="human", verbose=False)
+        for hit in result["hits"]:
+            if "ensembl" in hit and "gene" in hit["ensembl"]:
+                print(gene_id + " " + hit["ensembl"]["gene"])
+
+        # data to be sent to api 
+        #data = {'utr_db':0, 
+        #        'utr_type':3, 
+        #        'organism':9606, 
+        #        'accession_type':0,
+        #        'ids': gene_id,
+        #        'output': "html"} 
+
+        # sending post request and saving response as response object 
+        #page = requests.post(url = API_ENDPOINT, data = data) 
+        #print(page.text)
+        #tree = html.fromstring(page.text)
+        
+        # extracting response text
+        #utrlink_list = tree.xpath("//a[starts-with(@href, '/getutr/')]/text()")
+        #print(tree)
+        
+        #try:
+        #    handle = Entrez.esearch(db="gene", term=search_string)
+        #    record = Entrez.read(handle)
+        #    ids = record['IdList']
+        #    print(ids)
+        #    #this returns ids as a list if and if no id found it's []. Now lets assume it return 1 item in the list.
+        #    if len(ids) > 0:
+        #        ncbi_gene_id = ids[0] #you must implement an if to deal with <0 or >1 cases
+        #        print(ncbi_gene_id)
+        #        # save the ncbi_gene_id info into ncbi_gene_id field
+        #        gene.ncbi_gene_id = ncbi_gene_id
+        #        gene.save()
+
+        #        handle = Entrez.efetch(db="nucleotide", id=ncbi_gene_id, rettype="fasta", retmode="text")
+        #        record = handle.read()
+         #       print(record.rstrip('\n'))
                 # save the fasta info into gene_fasta field
-                gene.gene_fasta = record.rstrip('\n')
-                gene.save()
-        except HTTPError:
-            print("HTTP error")
+        #        gene.gene_fasta = record.rstrip('\n')
+         #       gene.save()
+        #except HTTPError:
+        #    print("HTTP error")
         #this will give you a fasta string which you can save to a file
         #out_handle = open('myfasta.fasta', 'w')
         #out_handle.write(record.rstrip('\n'))
