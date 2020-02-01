@@ -1,5 +1,5 @@
 # Cython==0.28.5
-Django>=3.0.1
+Django>=2.1
 psycopg2>=2.7,<3.0
 
 # These should be okay to update minors
