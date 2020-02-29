@@ -15,7 +15,7 @@ import sys
 
 def runMeme(fastafile, type):
     # clean the output folder
-    output_dir = "./output/"
+    output_dir = os.getcwd() + "/bioinformatics_pipeline/scripts/output/"
     # clean all the file contents inside the output directory first
     filelist = [ f for f in os.listdir(output_dir)]
     for f in filelist:
@@ -25,7 +25,7 @@ def runMeme(fastafile, type):
     timeString = utils.getTimeString()
 
     # create log file for current execution
-    file = open (f"""./logs/MEME_{timeString}_output.txt""", "w+")
+    file = open (f"""{os.getcwd()}/bioinformatics_pipeline/scripts/logs/MEME_{timeString}_output.txt""", "w+")
     file.write("started cron job \n")
 
 
@@ -36,9 +36,9 @@ def runMeme(fastafile, type):
     else:
         meme_args = '-protein -mod zoops -nmotifs 3 -minw 6 -maxw 30 -nostatus -maxsize 1000000'
     catalase_fasta_value = fastafile
-    pipeline = Pipeline("./application.cfg")
+    pipeline = Pipeline(f"""{os.getcwd()}/bioinformatics_pipeline/scripts/application.cfg""")
     output = pipeline.run_meme(fasta_in=catalase_fasta_value,
-        out_dir='./output',
+        out_dir=f"""{os.getcwd()}/bioinformatics_pipeline/scripts/output""",
         strargs=meme_args.replace(' -p {}'.format(get_cpu_count()), ''))
     print(output)
     file.write("finished job")
