@@ -14,7 +14,7 @@ import utils
 
 def runBlastp(fastaFileName):
     # clean the output folder
-    output_dir = "./output/"
+    output_dir = os.getcwd() + "/bioinformatics_pipeline/scripts/output/"
     filelist = [ f for f in os.listdir(output_dir) if f.endswith(".bak") ]
     for f in filelist:
         os.remove(os.path.join(output_dir, f))
@@ -23,7 +23,7 @@ def runBlastp(fastaFileName):
     timeString = utils.getTimeString()
 
     # log file
-    file = open (f"""./logs/Blastp_{timeString}_output.txt""", "w+")
+    file = open (f"""{os.getcwd()}/bioinformatics_pipeline/scripts/logs/Blastp_{timeString}_output.txt""", "w+")
     file.write("started cron job \n")
 
     # Run BLAST and parse the output as XML
