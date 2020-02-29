@@ -22,7 +22,7 @@ def getTimeString():
 
 def getDatabaseConnection():
     conn = None
-    with open(os.getenv("ENV_FILE", "../app/config/env.json")) as f:
+    with open(os.getenv("ENV_FILE", "/home/ec2-user/bioinformatics_pipeline/app/config/env.json")) as f:
         ENV = json.load(f)
         conn = psycopg2.connect(database=ENV.get('PostgreSQL_DATABASE'),
                                 user=ENV.get('PostgreSQL_USER'), 
