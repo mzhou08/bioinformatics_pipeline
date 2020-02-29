@@ -25,3 +25,7 @@ mygene
 ensembl_rest
 
 pyOpenSSL
+
+python-decouple==3.3
+whitenoise>=5.0.1,<5.0.9
+

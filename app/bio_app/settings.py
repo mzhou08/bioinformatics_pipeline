@@ -14,6 +14,7 @@ import os
 import json
 
 from debug_toolbar import settings as dt_settings
+from decouple import config
 
 if os.getenv("ENV_JSON"):
     # optionally load settings from an environment variable
@@ -146,7 +147,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
+# Static files (CSS, JavaScript, Images)
+
+STATIC_URL = config('DJANGO_STATIC_URL', default='/static/')
+STATIC_ROOT = config('DJANGO_STATIC_ROOT',
+                     default=os.path.join(BASE_DIR, 'staticfiles'))
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
 
 # Method to show the user, if they're authenticated and superuser
 def show_debug_toolbar(request):

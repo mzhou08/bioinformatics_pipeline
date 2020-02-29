@@ -1,0 +1,399 @@
+
+body{
+  font-family: "Metrophobic";
+  font-size: 12px;
+  font-style: normal;
+  font-variant: normal;
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
+}
+
+.header{
+  position: fixed;
+  top: 0px;
+  height:70px;
+  width: 100vw;
+  z-index:10;
+  font-family: "Metrophobic";
+  font-size: 16px;
+  color:white;
+  background-color:#337ab7;
+  box-shadow: 1px 1px 15px grey;
+}
+
+.navmenuicon {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+#navmenu {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  font-size: 20px;
+  background: white;
+  color: blue;
+  border: 1px solid black;
+  width: 150px;
+  list-style: none inside;
+  z-index: 11;
+  margin: 0px;
+  padding: 0px;
+}
+
+#navmenu li { padding: 10px; }
+/*#navmenu li:not(:first-child) { padding-top: 5px; }*/
+#navmenu li:hover { background-color: #337ab7; color: white; }
+#navmenu a { text-decoration: none; }
+
+.navbarBrand{ 
+  position: absolute;
+  top: 10px;
+  left: 100px;
+  background: url(../img/visGraph-icon.jpg) center / contain no-repeat;
+  z-index:10;
+  width: 70px;
+  height: 50px;
+}
+
+.header p {
+  font-family: "Metrophobic";
+  font-size: 14px;
+  position: absolute;
+  top: 12px;
+  left: 190px;
+  white-space: pre;
+  overflow: hidden;
+}
+
+#fileinput {
+  position: absolute;
+  top: 7px;
+  left: 740px;
+  border: 1px solid #DDD;
+  color: white;
+  background-color: #337ab7;
+  border-radius: 3px;
+}
+
+#sampleSelect {
+  position: absolute;
+  top: 37px;
+  left: 740px;
+  border: 1px solid #DDD;
+  color: white;
+  background-color: #337ab7;
+  border-radius: 3px;
+}
+
+#footer {
+  z-index: 20;
+  position: fixed;
+  bottom:0px;
+  width: 100vw;
+  height:20px;
+  text-align:center;
+  color:white;
+  background-color:#337ab7;
+  box-shadow: 1px 1px 15px grey;
+}
+
+/* Vertical data display with horizontal slide-in/out:*/
+#controlMenu {
+  position:absolute;
+  top: 70px;
+  left: 0px;
+  background:white;
+  z-index:10;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  border-collapse: collapse;
+  margin: 0px;
+  padding: 0px;
+  transition-property: left;
+  transition-duration: 100ms;
+}
+
+#mainCtrl {
+  vertical-align: top;
+  width: 370px;
+  max-width: 370px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  -moz-box-shadow:    inset 0 0 10px #000000;
+  -webkit-box-shadow: inset 0 0 10px #000000;
+  box-shadow:         inset 0 0 10px #000000;
+  pointer-events: all;
+}
+
+/* Horizontal data display with vertical slide-up/down: */
+#vizCtrl {
+  vertical-align: middle;
+  text-align: center;
+  width: 15px;
+  background-color: #EEE;
+  cursor: pointer;
+}
+
+#tblView {
+  position: absolute;
+  bottom: 20px; /* Footer is 20px high */
+  left: 16px;
+  background: white;
+  z-index: 9;
+  overflow: hidden;
+  border-collapse: collapse;
+  margin: 0px; padding: 0px;
+  transition-property: bottom;
+  transition-duration: 100ms;
+  width: 1000px;
+}
+#tblViewCtrl {
+  vertical-align: middle;
+  text-align: center;
+  height: 15px;
+  background-color: #EEE;
+  cursor: pointer;
+}
+#tblViewData {
+  vertical-align: top;
+  height: 250px;
+  max-height: 250px;
+  overflow-x: scroll;
+  overflow-y: scroll;
+  -moz-box-shadow:    inset 0 0 10px #000000;
+  -webkit-box-shadow: inset 0 0 10px #000000;
+  box-shadow:         inset 0 0 10px #000000;
+  pointer-events: all;
+}
+
+.graphDiv {
+  z-index:-1;
+  position: absolute;
+  top: 70px;
+  left: 0px;
+  width: 100vw;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  float:right;
+}
+
+#lbutton_dismiss {
+  border-radius: 5px;
+  background: rgba(255,255,255,.7);
+  padding: 8px;
+  border: 1px solid grey;
+  cursor: pointer;
+  pointer-events: all;
+  z-index: 3;
+}
+
+#lbutton {
+  position: absolute;
+  right: 20px;
+  top: 25px;
+  border-radius: 5px;
+  background: rgba(255,255,255,.7);
+  padding: 8px;
+  border: 1px solid grey;
+  cursor: pointer;
+  pointer-events: all;
+  z-index: 3;
+}
+
+#legend {
+  position: absolute;
+  right: 20px;
+  top: 25px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid grey;
+  border-collapse: separate;
+  border-spacing: 5px 1px;
+  background: rgba(255,255,255,.7);
+  z-index: 3;
+  display: none;
+}
+
+.myHr{
+  margin:10px;
+}
+
+.myFilter_Select{
+  width:100px;
+}
+
+#centerNode{
+  margin-top: 10px;
+  margin-left:10px;
+}
+
+#centerNode input[type='text'], #centerNode button {
+  border-radius: 5px;
+  border: 1px solid gray;
+  background-color: white;
+  padding: 2px;
+}
+
+#fbutton {
+  cursor: pointer;
+  margin-left:10px;
+  padding: 5px;
+  border: 1px solid grey;
+  background:white;
+  border-radius: 5px;
+}
+
+#filter_dismiss{
+  float: right;
+  cursor: pointer;
+  margin-top:10px;
+  padding: 5px;
+  border: 1px solid grey;
+  background:white;
+  pointer-events: all;
+}
+
+#filter {
+  display: none;
+  margin-left: 10px;
+  border-collapse: separate;
+  border-spacing: 5px 2px;
+  border: 1px solid gray;
+  border-radius: 5px;
+}
+#filter tr:not(:first-child) th {
+  vertical-align: top;
+  text-align: right;
+}
+#filter select, #filter input[type='text'], #filter input[type='number'] {
+  border: 1px solid gray;
+  background: white;
+  padding: 3px;
+  border-radius: 5px;
+  min-width: 140px;
+}
+#filter button, #filter input[type='button'], #filter input[type='reset'] {
+  cursor: pointer;
+  margin: 2px 10px 5px 0px;
+  border-radius: 5px;
+  border: 1px solid gray;
+  padding: 2px 3px;
+  background: white;
+}
+#filter input[type=file] { width: 200px; }
+
+#linkSelected {
+  font-size:12px;
+  margin-top:10px;
+  margin-left:10px;
+  width:300px;
+  padding: 5px;
+  border: 1px solid grey;
+  border-radius: 5px;
+  background: rgba(255,255,255,.7);
+  visibility: hidden;
+  clear:both;
+}
+
+#linkSelected_hr{
+  visibility: hidden;
+}
+
+#putTable {
+  padding: 5px;
+  clear:both;
+  z-index: 10;
+  margin-left: 5px;
+}
+
+#dbNameH3{
+  font-size:1.5em;	
+  margin-top:0;
+  margin-bottom:5px;
+  color:#00BFFF;
+}
+
+/* Context menus */
+
+.contextMenu {
+  position: absolute;
+  pointer-events: all;
+  color: black;
+  top: 75px;
+  border-radius: 5px;
+  z-index: 3;
+  clear:both;
+}
+
+#mRNA_menu, #miRNA_menu {
+  display: none;
+  border:1px solid grey;
+  border-radius:5px;
+  background-color:white;
+  width:150px;
+}
+
+.contextMenu li {
+  border-bottom: 1px solid lightgrey;
+  font-weight: bold;
+}
+
+/******************/
+
+#submissions {
+  border: 1px solid black;
+  border-radius: 5px;
+  background: white;
+  position: absolute;
+  width: 50vw; height: 50vh;
+  top: 25vh;
+  left: 25vw;
+  padding: 10px;
+  z-index: 100;
+}
+
+#submissions div { font-weight: bold; font-size: 20px;}
+#submissions table { border-collapse: separate; border-spacing: 5px; }
+#submissions table thead th { border-bottom: 2px solid gray; }
+#subtbl tr:nth-child(odd) { background: #EEE; }
+#subtbl td.complete { background: lightgreen; }
+#subtbl td.working { background: lightblue; }
+#subtbl td.missing { background: #FF5454; color: white; }
+#subtbl td button { color: black; }
+
+#subbuttons { position: absolute; bottom: 10px; right: 10px; }
+#subbuttons button { font-size: 16px; }
+
+#nodeLabels {
+  pointer-events: none;
+  margin: 0px;
+  padding: 0px;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  top: 78px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.nodelabel {
+  position: absolute;
+  pointer-events: none;
+  color: black;
+  background: rgba(255,255,255,.7);
+  border-radius: 5px;
+}
+
+#nodeHover {
+  position: absolute;
+  border: 1px solid gray;
+  border-radius: 5px;
+  visibility: hidden;
+  background: rgba(255,255,255,.7);  
+}

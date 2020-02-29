@@ -55,6 +55,21 @@ import mygene
 
 logger = logging.getLogger(__name__)
 
+########## static html ###########
+def get_info_template(request):
+    return render(request, 'info.html')
+
+def get_tutorial_template(request):
+    return render(request, 'tutorial.html')
+
+def get_protein_analysis_template(request):
+    return render(request, 'protein_analysis.html')
+
+def get_gene_analysis_template(request):
+    return render(request, 'gene_analysis.html')
+
+####################
+
 # upload protein csv
 def get_upload_csv_template(request): 
     return render(request, 'upload_csv.html', context={})

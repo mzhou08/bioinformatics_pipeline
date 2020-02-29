@@ -22,6 +22,8 @@ from django.conf import settings
 
 from django.urls import path
 
+from django.conf.urls.static import static
+
 
 path('select2/', include('django_select2.urls')),
 
@@ -55,8 +57,12 @@ urlpatterns = [
     
     url(r'^memeRNA/$', views.meme_view, name="meme"),
     url(r'^select2/', include('django_select2.urls')),
+    url(r'^info/$', views.get_info_template, name="info"),
+    url(r'^tutorial/$', views.get_tutorial_template, name="tutorial"),
+    url(r'^protein_analysis/$', views.get_protein_analysis_template, name="protein_analysis"),
+    url(r'^gene_analysis/$', views.get_gene_analysis_template, name="gene_analysis"),
 
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
