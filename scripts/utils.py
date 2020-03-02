@@ -2,6 +2,7 @@ import os
 import shutil
 import unittest
 from datetime import datetime, date
+import moca
 from moca.helpers import get_cpu_count
 from moca.pipeline import Pipeline
 from moca.bedoperations import fimo_to_sites
@@ -10,6 +11,7 @@ import zipfile
 import psycopg2
 import yagmail
 import json
+import pathlib
 
 def getTimeString():
     # get current time
@@ -22,7 +24,7 @@ def getTimeString():
 
 def getDatabaseConnection():
     conn = None
-    with open(os.getenv("ENV_FILE", "/home/ec2-user/bioinformatics_pipeline/app/config/env.json")) as f:
+    with open("/home/michaelzhou/bioinformatics_pipeline/app/config/env.json") as f:
         ENV = json.load(f)
         conn = psycopg2.connect(database=ENV.get('PostgreSQL_DATABASE'),
                                 user=ENV.get('PostgreSQL_USER'), 
@@ -49,7 +51,7 @@ def createZipFile(zipname, path):
     zipf.close()
 
 
-def getFastaFileFromDb():
+def getFastaFileFromDb(scripts_file_path):
     conn = getDatabaseConnection()
     cur = conn.cursor()
     # get the first protein_MEME request
@@ -80,7 +82,7 @@ def getFastaFileFromDb():
             # concatenate all fasta info into one fasta file
             # file format: <request_id>_<requester_email>_fasta.txt
             protein_class = request_detail
-            fasta_file_name = f"""{request_id}_{requester_email}_protein_fasta.txt"""
+            fasta_file_name = f"""{scripts_file_path}{request_id}_{requester_email}_protein_fasta.txt"""
             fasta_file = open (fasta_file_name, "w+")
             protein_cur = conn.cursor()
             protein_cur.execute(f"""SELECT PROTEIN_FASTA FROM PROTEIN_SEQUENCE WHERE PROTEIN_CLASS='{protein_class}'""")
@@ -95,7 +97,7 @@ def getFastaFileFromDb():
             # concatenate all fasta info into one fasta file
             # file format: <request_id>_<requester_email>_fasta.txt
             protein_class = request_detail
-            fasta_file_name = f"""{request_id}_{requester_email}_protein_fasta.txt"""
+            fasta_file_name = f"""{scripts_file_path}{request_id}_{requester_email}_protein_fasta.txt"""
             fasta_file = open (fasta_file_name, "w+")
             protein_cur = conn.cursor()
             protein_cur.execute(f"""SELECT PROTEIN_FASTA FROM PROTEIN_SEQUENCE WHERE PROTEIN_CLASS='{protein_class}'""")
@@ -113,7 +115,7 @@ def getFastaFileFromDb():
             cluster_id = request_detail_json['cluster_id']
             miRNA_id = request_detail_json['miRNA_id']
 
-            fasta_file_name = f"""{request_id}_{requester_email}_gene_fasta.txt"""
+            fasta_file_name = f"""{scripts_file_path}{request_id}_{requester_email}_gene_fasta.txt"""
             fasta_file = open (fasta_file_name, "w+")
             gene_cur = conn.cursor()
             gene_cur.execute(f"""select gene_fasta \
@@ -187,7 +189,8 @@ def sendNotificationEmail():
     yag.send('mzhou08@gmail.com', 'subject', contents)
 
 def updateRequestStatus(fastaFileName):
-    # get request id from file name: <request_id>_<requester_email>_fasta.txt
+    # get request id from file name: <path>/<request_id>_<requester_email>_fasta.txt
+    fastaFileName=pathlib.PurePath(fastaFileName).name
     parts = fastaFileName.split('_')
     print(parts)
     request_id = parts[0]
@@ -197,7 +200,7 @@ def updateRequestStatus(fastaFileName):
     conn = getDatabaseConnection()
     cur = conn.cursor()
     timeString = getTimeString()
-    update_sql = f"""UPDATE REQUEST_QUEUE SET REQUEST_STATUS = 'FINSHED on {timeString} ' WHERE ID={request_id}"""
+    update_sql = f"""UPDATE REQUEST_QUEUE SET REQUEST_STATUS = 'FINSHED on {timeString}' WHERE ID='{request_id}'"""
     print(update_sql)
     cur.execute(update_sql)
     conn.commit()

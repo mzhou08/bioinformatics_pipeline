@@ -1,3 +1,4 @@
+#!/usr/bin/python3 
 import os
 import utils
 
@@ -12,9 +13,9 @@ from Bio import SeqIO
 import utils
 
 
-def runBlastp(fastaFileName):
+def runBlastp(script_path, fastaFileName):
     # clean the output folder
-    output_dir = os.getcwd() + "/bioinformatics_pipeline/scripts/output/"
+    output_dir = f"""{script_path}output/"""
     filelist = [ f for f in os.listdir(output_dir) if f.endswith(".bak") ]
     for f in filelist:
         os.remove(os.path.join(output_dir, f))
@@ -23,15 +24,16 @@ def runBlastp(fastaFileName):
     timeString = utils.getTimeString()
 
     # log file
-    file = open (f"""{os.getcwd()}/bioinformatics_pipeline/scripts/logs/Blastp_{timeString}_output.txt""", "w+")
+    file = open (f"""{script_path}logs/Blastp_{timeString}_output.txt""", "w+")
     file.write("started cron job \n")
 
     # Run BLAST and parse the output as XML
     # now create a zip file for MEME artifacts
     # fastaFileName format: <ID>_<requester_email>_fasta.txt
     # blastpFileName format: <ID>_<requester_email>.zip
+    print(fastaFileName)
     blastpFileName = fastaFileName.replace("_fasta.txt", "_blastp.csv")
-    cline = NcbiblastpCommandline(query=fastaFileName, subject="GCF_000146045.2_R64_protein.faa", 
+    cline = NcbiblastpCommandline(query=fastaFileName, subject=f"""{script_path}GCF_000146045.2_R64_protein.faa""", 
                     #outfmt='6 qseqid sseqid qstart qend evalue', 
                     outfmt='6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore', 
                     out=blastpFileName, 
@@ -56,6 +58,9 @@ def refineBlastpResult(blastFileName):
     print(outputFileName)
 
     df = pd.read_csv(blastFileName, sep='\t')
+    if (df.empty):
+        return
+    
     print(df.head(5))
 
     # the default outfmt 6 columns
@@ -66,8 +71,11 @@ def refineBlastpResult(blastFileName):
     new_sorted_df= new.sort_values(by=['qseqid', 'sseqid'], ascending=False)
     new_sorted_df.to_csv(outputFileName,index=False)
 
+
+script_path ="/home/michaelzhou/bioinformatics_pipeline/scripts/"
+
 # connect to database, get blastp request, and construct fasta file
-fastaFileName = utils.getFastaFileFromDb()
+fastaFileName = utils.getFastaFileFromDb(script_path)
 
 if (len(fastaFileName) == 0):
     print("no pending request found")
@@ -75,11 +83,13 @@ if (len(fastaFileName) == 0):
     exit(0)
 
 # run meme procedure for the fasta file
-blastFileName = runBlastp(fastaFileName)
+blastFileName = runBlastp(script_path, fastaFileName)
 
 # update request status
 utils.updateRequestStatus(fastaFileName)
 
+print(f"""script_path={script_path}""")
+print(f"""blastFileName={blastFileName}""")
 # process and sort blastp result file
 refineBlastpResult(blastFileName)
 
