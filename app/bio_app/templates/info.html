@@ -1,4 +1,8 @@
-{% extends 'base.html' %}  
+{% extends 'base.html' %} 
+{% load static %} 
 {% block content %}
-This is information page
+This is information page 
+<div>
+    <img src="{% static 'images/bio_app.png' %}" style="width:700px;height:500px;" alt="system pipeline" height="42" width="42"> 
+</div>
 {% endblock %}
