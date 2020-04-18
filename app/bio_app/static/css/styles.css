@@ -397,3 +397,35 @@ body{
   visibility: hidden;
   background: rgba(255,255,255,.7);  
 }
+
+li {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+li:last-child {
+ margin-bottom: 0px;
+ font-size: 16px;
+}
+
+ul {
+  padding: 1px;  
+  padding-left: 20px;
+  font-size: 20px;
+}
+
+img {
+  width: 100%;
+  height: auto;
+  align-self: left;
+}
+
+.container {
+  width: 100%;
+  height: auto;
+  text-align: left;
+}
+
+.myText {
+  width: 100%;
+}

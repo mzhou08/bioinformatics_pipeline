@@ -1,8 +1,13 @@
 {% extends 'base.html' %} 
 {% load static %} 
 {% block content %}
-This is information page 
-<div>
-    <img src="{% static 'images/bio_app.png' %}" style="width:700px;height:500px;" alt="system pipeline" height="42" width="42"> 
+<div class="container">
+    <span class="myText">
+        The pipeline contains a Django web application with the gene/protein sequence data stored in a database. The user can make protein/gene homology and phylogeny analysis requests inside the web application. We use Jenkins scheduler server to arrange multiple Python scripts to run on scheduled time intervals, for tasks such as motif analysis, protein database lookup, multiple sequence analysis, phylogenetic tree generation, etc.
+    </span>
+    <div>
+        <img src="{% static 'images/bio_app.png' %}" style="width:800px;height:400px;" alt="system pipeline"> 
+    </div>
 </div>
+
 {% endblock %}
